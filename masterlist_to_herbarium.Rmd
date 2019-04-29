@@ -1,0 +1,20 @@
+---
+title: "Submitting Data to the Herbarium"
+author: "Jasmine"
+date: '2019-04-29'
+output: html_document
+---
+
+Make sure you have these packages installed
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(tidyverse)
+library(googlesheets)
+```
+
+
+```{r}
+
+```
+
