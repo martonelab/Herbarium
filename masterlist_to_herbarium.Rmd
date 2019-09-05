@@ -11,10 +11,107 @@ knitr::opts_chunk$set(echo = TRUE)
 library(readxl)
 library(tidyverse)
 library(googlesheets)
+library(here)
+library(taxize)
+```
+
+load your data
+```{r}
+file <- "Master Collector Excel Templates_Kyra2019.xlsx"
+s_num <- 2
+row_skip <- 4
+```
+
+## Load in your spreadsheet with your PTM numbers
+```{r}
+original <- read_xlsx(here("./data/",file), sheet = s_num, skip = row_skip)
+
+#removes rows that are not specimens (ie NA)
+df_na <- filter(original, str_detect(original$`Collector Number`, "PTM"))
+```
+
+## Load in herbarium template
+```{r}
+collector_a <- read_xlsx("Master-Collector-Excel-Templates-20190429.xlsx",sheet = 2, skip = 4)
 ```
 
 
+## Read in the master list
 ```{r}
+library(googlesheets)
+#library(googlesheets4) # future will be googlesheets4
+#(ptm <- drive_get("PTM - Master List"))
 
+#need to authenticate (see popup window)
+mysheets <- gs_ls()
+
+gs_master <- gs_title("PTM - Master List")
+
+#gets the data
+gs_ptm<- gs_read(gs_master)
+
+#cleans up columns
+colnames(gs_ptm) <- gs_ptm[1,]
+new <- gs_ptm[-c(1,2),]
+```
+
+## Select the rows
+```{r}
+df <- new %>% 
+  mutate(num = paste0("PTM",`PTM#`)) %>% 
+  filter(num %in% df_na$`Collector Number`)
+```
+
+### Figure out which name to use
+```{r}
+df_nm <- df %>% 
+  mutate(choice = if_else(is.na(df$`Final determination`),
+                      df$`Determination in the field`,
+                      df$`Final determination`),
+         gs = choice) %>% 
+  separate(choice, c("Genus","Species"), " ")
+
+# check
+names <- cbind(df$`Final determination`, df$`Determination in the field`, df$`genetic match/notes`)
+```
+
+### Phylum Class Family
+- !!! fix species
+- BOLD is pretty reliable but still has mistakes on some obscure species
+- only run if there isn't any phylum data
+- can we use the herbarium data base?
+```{r}
+higher <- classification(df_nm$Genus, db="bold")
+
+#itis <- classification(df_nm$Genus, db="itis")
+#itis_2 <- classification(df_nm$gs, db="itis")
+
+empty <- collector_a[FALSE,]
+
+for(i in 1:length(higher)) {
+  if(!is.na(higher[i])) {
+    species <- higher[[i]]
+    rect <- c(species$name)
+    names(rect) <- c(species$rank)
+    
+    empty <- empty %>%
+      add_row(Phylum = rect["phylum"],
+              Class = rect["class"],
+              Genus = rect["genus"])
+  }
+  else{empty <- empty %>%  add_row(Phylum = NA)}
+}
+```
+
+```{r}
+meta <- df_nm %>%
+  mutate(Herbarium = "UBC",
+         LabelQty = 1,
+         Qualifier = "") %>% 
+  cbind(empty$Phylum,empty$Class,empty$Genus)
+
+## select columns
+herb <- meta %>% 
+  select(`PTM#`, Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species)
 ```
 
