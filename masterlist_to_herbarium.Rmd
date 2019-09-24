@@ -80,6 +80,8 @@ names <- cbind(df$`Final determination`, df$`Determination in the field`, df$`ge
 - BOLD is pretty reliable but still has mistakes on some obscure species
 - only run if there isn't any phylum data
 - can we use the herbarium data base?
+
+!!! need to see if you can get authorship
 ```{r}
 higher <- classification(df_nm$Genus, db="bold")
 
