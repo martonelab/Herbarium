@@ -106,9 +106,6 @@ for(i in 1:length(higher)) {
 ```
 
 ```{r}
-auth <- map_dfr(wh,`[`,"authority")
-auth %>% map(., c(.x[1]))
-
 meta <- df_nm %>%
   mutate(Herbarium = "UBC",
          LabelQty = 1,
@@ -131,16 +128,17 @@ meta_k <- df_nm %>%
          ProvinceState = "British Columbia",
          Coralline = "Yes",
          Location = paste(larger, ",", smaller),
+         Collectornum = paste0("PTM",`PTM#`),
          ProjectID = "KyraCrusts2019") %>% 
   cbind(empty$Phylum,empty$Class,empty$Genus)
 
 
 kyra <- meta_k %>% 
-  select(`PTM#`, Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species, #Species Authonr
-         Country, ProvinceState, Location,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Main Collector`, `PTM#`,Determiners, DeterminationDate, Notes, Coralline)
+  select( Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species, #Species Authonr
+         Country, ProvinceState, Location,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Main Collector`,`Other collectors`, Collectornum, Determiners, DeterminationDate, Notes, Coralline)
 ```
 
 ```{r}
-write_csv(meta_k,"output/2019Sept24_KyraCoralline.csv")
+write_csv(kyra,"output/2019Sept24_KyraCoralline.csv", na = "")
 ```
 
