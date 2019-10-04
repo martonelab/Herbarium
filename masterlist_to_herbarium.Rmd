@@ -5,6 +5,16 @@ date: '2019-04-29'
 output: html_document
 ---
 
+specify some variables
+```{r}
+#bceause Country and Province state were not specified before in the Master list
+ctry <- "Canada"
+prov <- "British Columbia"
+
+pid <- "PTM_CArbuscula"
+```
+
+
 Make sure you have these packages installed
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -17,14 +27,14 @@ library(taxize)
 
 load your data
 ```{r}
-file <- "Master Collector Excel Templates_Kyra2019.xlsx"
+file <- "PTMno"
 s_num <- 2
 row_skip <- 4
 ```
 
 ## Load in your spreadsheet with your PTM numbers
 ```{r}
-original <- read_xlsx(here("./data/",file), sheet = s_num, skip = row_skip)
+original <- read_xlsx(here("./data", paste0(file,".xlsx")), sheet = s_num, skip = row_skip)
 
 #removes rows that are not specimens (ie NA)
 df_na <- filter(original, str_detect(original$`Collector Number`, "PTM"))
@@ -83,7 +93,7 @@ names <- cbind(df$`Final determination`, df$`Determination in the field`, df$`ge
 
 !!! need to see if you can get authorship
 ```{r}
-higher <- classification(df_nm$Genus, db="bold")
+higher <- classification(df_nm$Genus, db= "bold")
 
 #itis <- classification(df_nm$Genus, db="itis")
 #itis_2 <- classification(df_nm$gs, db="itis")
@@ -95,7 +105,7 @@ for(i in 1:length(higher)) {
     species <- higher[[i]]
     rect <- c(species$name)
     names(rect) <- c(species$rank)
-    
+
     empty <- empty %>%
       add_row(Phylum = rect["phylum"],
               Class = rect["class"],
@@ -107,13 +117,27 @@ for(i in 1:length(higher)) {
 
 ```{r}
 meta <- df_nm %>%
+    separate(Locality,c('smaller','larger'), sep = ",") %>% 
   mutate(Herbarium = "UBC",
          LabelQty = 1,
-         Qualifier = "") %>% 
+         Qualifier = "",
+         Country = ctry,
+         ProvinceState = prov,
+         Coralline = "Yes",
+         Location = paste(larger, ",", smaller),
+         Collectornum = paste0("PTM",`PTM#`),
+         ProjectID = pid) %>% 
   cbind(empty$Phylum,empty$Class,empty$Genus)
 
-## select columns
-herb <- meta %>% 
-  select(`PTM#`, Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species)
+
+final <- meta %>% 
+  select( Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species, #Species Authonr
+         Country, ProvinceState, Location,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Main Collector`,`Other collectors`, Collectornum, Determiners, DeterminationDate, Notes, Coralline)
+
+colnames(final)[colnames(final)=="empty$Phylum"] <- "Phylum"
+colnames(final)[colnames(final)=="empty$Class"] <- "Class"
 ```
 
+```{r}
+write_csv(final,paste0("output/",file,".csv"), na = "")
+```
