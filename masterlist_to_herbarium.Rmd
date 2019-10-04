@@ -125,14 +125,14 @@ meta <- df_nm %>%
          ProvinceState = prov,
          Coralline = "Yes",
          Location = paste(larger, ",", smaller),
-         Collectornum = paste0("PTM",`PTM#`),
+         `Collector Number` = paste0("PTM",`PTM#`),
          ProjectID = pid) %>% 
   cbind(empty$Phylum,empty$Class,empty$Genus)
 
 
 final <- meta %>% 
-  select( Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species, #Species Authonr
-         Country, ProvinceState, Location,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Main Collector`,`Other collectors`, Collectornum, Determiners, DeterminationDate, Notes, Coralline)
+  select( Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus, Qualifier, Species, #Species Author
+         Country, ProvinceState, Location,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Primary Collector`,`Other collectors`, `Collector Number`, `Determined by`, `Determination Date`, `Field Notes`, Coralline)
 
 colnames(final)[colnames(final)=="empty$Phylum"] <- "Phylum"
 colnames(final)[colnames(final)=="empty$Class"] <- "Class"
