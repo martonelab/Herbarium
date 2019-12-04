@@ -5,6 +5,16 @@ date: '2019-04-29'
 output: html_document
 ---
 
+specify some variables
+```{r}
+#bceause Country and Province state were not specified before in the Master list
+ctry <- "Canada"
+prov <- "British Columbia"
+
+pid <- "PTM_CArbuscula"
+```
+
+
 Make sure you have these packages installed
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -124,12 +134,12 @@ meta_k <- df_nm %>%
   mutate(Herbarium = "UBC",
          LabelQty = 1,
          Qualifier = "",
-         Country = "Canada",
-         ProvinceState = "British Columbia",
+         Country = ctry,
+         ProvinceState = prov,
          Coralline = "Yes",
          Location = paste(larger, ",", smaller),
          Collectornum = paste0("PTM",`PTM#`),
-         ProjectID = "KyraCrusts2019") %>% 
+         ProjectID = pid) %>% 
   cbind(empty$Phylum,empty$Class,empty$Genus)
 
 
