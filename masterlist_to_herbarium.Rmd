@@ -7,7 +7,7 @@ output: html_document
 
 specify some variables
 ```{r}
-pid <- "herbarium"
+file <- "Cbodegensis"
 ```
 
 
@@ -61,6 +61,11 @@ names <- cbind(df$`Final determination`, df$`Determination in the field`, df$`ge
 - can we use the herbarium data base?
 
 !!! need to see if you can get authorship
+
+```{r}
+collector_a <- read_xlsx("Master-Collector-Excel-Templates-20190429.xlsx",sheet = 2, skip = 4)
+```
+
 ```{r}
 higher <- classification(df_nm$Genus, db= "itis")
 
@@ -91,7 +96,7 @@ meta <- df_nm %>%
          LabelQty = 1,
          Qualifier = "",
          Country = Country,
-         ProvinceState = ProvinceState,
+         ProvinceState = StateProvince,
          Coralline = "Yes",
          Location = paste(larger, ",", smaller),
          `Collector Number` = paste0("PTM",`PTM#`),
