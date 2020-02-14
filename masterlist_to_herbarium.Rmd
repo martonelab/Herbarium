@@ -5,11 +5,16 @@ date: '2019-04-29'
 output: html_document
 ---
 
-specify some variables
+specify some variables:
+1. what the output file will be named
 ```{r}
 file <- "Cbodegensis"
 ```
 
+List of specimens you want
+```{r}
+want <- c("PTM1986")
+```
 
 Make sure you have these packages installed
 ```{r setup, include=FALSE}
@@ -22,13 +27,8 @@ library(taxize)
 library(googlesheets4)
 ```
 
-List of specimens you want
-```{r}
-want <- c("PTM1986")
-```
-
-
 ## Read in the master list
+- you will need to verify
 ```{r, warning=FALSE}
 gs_ptm <- read_sheet("https://docs.google.com/spreadsheets/d/1vzVIT5gjQ0yCGwbAyqB4f8pltOkLfWz27TIFTxnm9hk",
                      sheet = 1,skip = 1, col_types = "iccccccDcccccccccccDcccccccnnccccc-")
