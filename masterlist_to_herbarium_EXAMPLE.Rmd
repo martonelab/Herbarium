@@ -23,6 +23,8 @@ library(tidyverse)
 library(googlesheets)
 library(here)
 library(taxize)
+library(ptm)
+library(worrms)
 ```
 
 load your data
@@ -48,21 +50,7 @@ collector_a <- read_xlsx("Master-Collector-Excel-Templates-20190429.xlsx",sheet 
 
 ## Read in the master list
 ```{r}
-library(googlesheets)
-#library(googlesheets4) # future will be googlesheets4
-#(ptm <- drive_get("PTM - Master List"))
-
-#need to authenticate (see popup window)
-mysheets <- gs_ls()
-
-gs_master <- gs_title("PTM - Master List")
-
-#gets the data
-gs_ptm<- gs_read(gs_master)
-
-#cleans up columns
-colnames(gs_ptm) <- gs_ptm[1,]
-new <- gs_ptm[-c(1,2),]
+new <- masterlist()
 ```
 
 ## Select the rows
@@ -86,33 +74,10 @@ names <- cbind(df$`Final determination`, df$`Determination in the field`, df$`ge
 ```
 
 ### Phylum Class Family
-- !!! fix species
-- BOLD is pretty reliable but still has mistakes on some obscure species
-- only run if there isn't any phylum data
-- can we use the herbarium data base?
-
-!!! need to see if you can get authorship
+- gets authorships using the worms database
 ```{r}
-higher <- classification(df_nm$Genus, db= "bold")
-
-#itis <- classification(df_nm$Genus, db="itis")
-#itis_2 <- classification(df_nm$gs, db="itis")
-
-empty <- collector_a[FALSE,]
-
-for(i in 1:length(higher)) {
-  if(!is.na(higher[i])) {
-    species <- higher[[i]]
-    rect <- c(species$name)
-    names(rect) <- c(species$rank)
-
-    empty <- empty %>%
-      add_row(Phylum = rect["phylum"],
-              Class = rect["class"],
-              Genus = rect["genus"])
-  }
-  else{empty <- empty %>%  add_row(Phylum = NA)}
-}
+higher <- wm_records_names(df_nm$gs) %>% 
+  map_dfr(.,`[`)
 ```
 
 ```{r}
@@ -120,35 +85,15 @@ meta <- df_nm %>%
   mutate(Herbarium = "UBC",
          LabelQty = 1,
          Qualifier = "") %>% 
-  cbind(empty$Phylum,empty$Class,empty$Genus)
+  left_join(higher, by = c("gs" = "scientificname"))
 
 ## select columns
 herb <- meta %>% 
-  select(`PTM#`, Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species, #Species Authonr
-         Locality,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Main Collector`, `PTM#`,Determiners, DeterminationDate, Notes )
+  select(`PTM#`, Herbarium, LabelQty, phylum, class, Genus,Qualifier, Species, authority,
+         Locality,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Primary Collector`, `PTM#`,`Determined by`, `Determination Date`, `Field Notes` )
 ```
 
 ```{r}
-meta_k <- df_nm %>%
-    separate(Locality,c('smaller','larger'), sep = ",") %>% 
-  mutate(Herbarium = "UBC",
-         LabelQty = 1,
-         Qualifier = "",
-         Country = ctry,
-         ProvinceState = prov,
-         Coralline = "Yes",
-         Location = paste(larger, ",", smaller),
-         Collectornum = paste0("PTM",`PTM#`),
-         ProjectID = pid) %>% 
-  cbind(empty$Phylum,empty$Class,empty$Genus)
-
-
-kyra <- meta_k %>% 
-  select( Herbarium, LabelQty, `empty$Phylum`, `empty$Class`, Genus,Qualifier, Species, #Species Authonr
-         Country, ProvinceState, Location,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Main Collector`,`Other collectors`, Collectornum, Determiners, DeterminationDate, Notes, Coralline)
-```
-
-```{r}
-write_csv(kyra,"output/2019Sept24_KyraCoralline.csv", na = "")
+write_csv(herb,"output/2019Sept24_KyraCoralline.csv", na = "")
 ```
 
