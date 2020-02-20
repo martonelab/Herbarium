@@ -7,10 +7,6 @@ output: html_document
 
 specify some variables
 ```{r}
-#bceause Country and Province state were not specified before in the Master list
-ctry <- "Canada"
-prov <- "British Columbia"
-
 pid <- "PTM_CArbuscula"
 ```
 
@@ -23,6 +19,7 @@ library(tidyverse)
 library(googlesheets)
 library(here)
 library(taxize)
+# to get the library below, run: devtools::install_github("laijasmine/ptm")
 library(ptm)
 library(worrms)
 ```
@@ -60,7 +57,7 @@ df <- new %>%
   filter(num %in% df_na$`Collector Number`)
 ```
 
-### Figure out which name to use
+###Figure out which name to use
 ```{r}
 df_nm <- df %>% 
   mutate(choice = if_else(is.na(df$`Final determination`),
@@ -76,8 +73,9 @@ names <- cbind(df$`Final determination`, df$`Determination in the field`, df$`ge
 ### Phylum Class Family
 - gets authorships using the worms database
 ```{r}
-higher <- wm_records_names(df_nm$gs) %>% 
-  map_dfr(.,`[`)
+higher <- wm_records_names(df_nm$gs) %>%
+  map_dfr(.,`[`) %>%
+  mutate(authorship = str_remove(authority, ", [:digit:]{4}")) # removes the year
 ```
 
 ```{r}
@@ -85,15 +83,18 @@ meta <- df_nm %>%
   mutate(Herbarium = "UBC",
          LabelQty = 1,
          Qualifier = "") %>% 
-  left_join(higher, by = c("gs" = "scientificname"))
+  left_join(higher, by = c("gs" = "scientificname")) 
 
 ## select columns
 herb <- meta %>% 
-  select(`PTM#`, Herbarium, LabelQty, phylum, class, Genus,Qualifier, Species, authority,
-         Locality,Latitude, Longitude, Habitat, Depth, `Reproductive Status`, `Date Collected`, `Primary Collector`, `PTM#`,`Determined by`, `Determination Date`, `Field Notes` )
+  select(`PTM#`, Herbarium, LabelQty, phylum, class, Genus,Qualifier, Species, authorship,
+         Country, StateProvince, Locality, Latitude, Longitude, Habitat, Depth, `Reproductive Status`,
+         `Date Collected`, `Primary Collector`, `PTM#`,`Determined by`, `Determination Date`, 
+         `Field Notes` )
 ```
 
 ```{r}
-write_csv(herb,"output/2019Sept24_KyraCoralline.csv", na = "")
+filename <- paste0("output/", format(Sys.time(), "%Y%b%d"),"_", pid)
+write_csv(herb, filename, na = "")
 ```
 
